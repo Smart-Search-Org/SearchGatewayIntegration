@@ -3,7 +3,7 @@ const axios = require('axios');
 
 class SearchRepository {
     constructor() {
-        this.SEARCH_URL = process.env.LLM_URL || "http://localhost:8002";
+        this.SEARCH_URL = process.env.SEARCH_URL || "http://localhost:8002";
     }
 
     async get_search_response(request_object) {
