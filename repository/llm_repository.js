@@ -7,7 +7,6 @@ class LlmRepository {
         this.MODEL = "Qwen/Qwen2.5-1.5B-Instruct";
     }
 
-    // The main method
     async get_llm_response(userQuery) {
         const systemPrompt = `
 You are a query transformation engine.
@@ -40,13 +39,13 @@ Rules:
 
 Example inputs and outputs:
 
-Input: "Show me Apple laptops under $1000"
+Input: "Show me apples in amount range from 1 to 2"
 Output:
 {
-  "query": "Apple laptops",
+  "query": "Show me apples",
   "filters": {
-    "brand": "Apple",
-    "price_max": 1000
+    "name": "apple",
+    "amount": [1.0, 2.0]
   }
 }
 
@@ -81,10 +80,8 @@ Output:
                 requestBody
             );
 
-            // Most chat APIs return content in choices[0].message.content
             const content = response.data?.choices?.[0]?.message?.content || "";
 
-            // Try to parse JSON response
             try {
                 return JSON.parse(content);
             } catch (err) {
