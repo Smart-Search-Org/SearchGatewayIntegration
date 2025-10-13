@@ -12,10 +12,12 @@ router.post('/', async function (req, res, next) {
         const query = req.body.query;
 
         if (!index_name) {
+            console.error('Error in /search route: missing "index_name" in request body');
             return res.status(400).json({ error: 'Missing "index_name" in request body' });
         }
 
         if (!query) {
+            console.error('Error in /search route: missing "query" in request body');
             return res.status(400).json({ error: 'Missing "query" in request body' });
         }
 

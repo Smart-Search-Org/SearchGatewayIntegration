@@ -1,10 +1,18 @@
+require('dotenv').config()
+
 var createError = require('http-errors');
 var express = require('express');
+const mongoose = require('mongoose');
+const authApi = require('./middlewares/auth_app');
+const cors = require('cors');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-var searchRouter = require('./routes/search');
+var smartSearchRouter = require('./routes/smart_search');
+var userRouter = require('./routes/user');
+
+const { loginUser, signupUser, getUser } = require('./routes/user');
 
 var app = express();
 
@@ -18,7 +26,14 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/search', searchRouter);
+app.use('/api/search', smartSearchRouter);
+app.use('/api/user', userRouter);
+
+//db connection
+mongoose.connect(process.env.MONGO_URI)
+.then(() => {
+    console.log("db connection established")
+})
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
