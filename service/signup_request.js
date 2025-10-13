@@ -1,41 +1,46 @@
-const User = require('../models/user_model')
-const validator = require('validator')
+const validator = require('validator');
+const User = require('../models/user_model');
 
-const signupRequest = async (req) => {
-    let errors = {};
-    let hasErrors = false;
-    const {email, password, confirm_password} = req.body
+class SignupRequestValidator {
+    static #instance;
 
-    if(validator.isEmpty(email)) {
-        errors.email = "Email is required."
+    constructor() {
+        if (SignupRequestValidator.#instance) {
+            return SignupRequestValidator.#instance;
+        }
+        SignupRequestValidator.#instance = this;
     }
 
-    if (!validator.isEmail(email)) {
-        errors.email = "Email not valid."
+    async validate(req) {
+        let errors = {};
+        const { email, password, confirm_password } = req.body;
+
+        if (!email || validator.isEmpty(email.trim())) {
+            errors.email = 'Email is required.';
+        } else if (!validator.isEmail(email)) {
+            errors.email = 'Email not valid.';
+        } else {
+            const exists = await User.findOne({ email });
+            if (exists) {
+                errors.email = 'Email already exists.';
+            }
+        }
+
+        if (!password || validator.isEmpty(password)) {
+            errors.password = 'Password is required.';
+        } else if (password !== confirm_password) {
+            errors.password = 'Password and Confirm Password do not match.';
+        }
+
+        return {
+            hasErrors: Object.keys(errors).length > 0,
+            errors,
+        };
     }
 
-    const exists = await User.findOne({ email })
-
-    if(exists) {
-        errors.email = "Email already in exist."
-    }
-
-    if(validator.isEmpty(password)) {
-        errors.password = "Password is required."
-    }
-
-    if(!validator.matches(password, confirm_password)){
-        errors.password = "Password and Confirm Password does not match."
-    }
-
-    if(Object.keys(errors).length > 0) {
-        hasErrors = true;
-    }
-
-    return {
-        hasErrors: hasErrors,
-        errors:errors
+    static getInstance() {
+        return new SignupRequestValidator();
     }
 }
 
-module.exports = signupRequest
+module.exports = SignupRequestValidator.getInstance();

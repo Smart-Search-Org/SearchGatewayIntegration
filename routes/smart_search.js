@@ -1,12 +1,13 @@
 const LlmService = require("../service/llm_service");
 const SearchService = require("../service/search_service");
 const express = require('express');
+const authApi = require("../middlewares/auth_app");
 const router = express.Router();
 
 llm_service = new LlmService()
 search_service = new SearchService()
 
-router.post('/', async function (req, res, next) {
+router.post('/smart-search', authApi, async function (req, res, next) {
     try {
         const index_name = req.body.index_name
         const query = req.body.query;

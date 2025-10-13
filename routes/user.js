@@ -15,7 +15,7 @@ router.post('/signup', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const validation = await signupRequest(req);
+        const validation = await signupRequest.validate(req);
         if (validation.hasErrors) {
             return res.status(422).json(validation.errors);
         }
@@ -27,6 +27,7 @@ router.post('/signup', async (req, res) => {
         const token = createToken(user._id);
 
         res.status(200).json({ email, token });
+
     } catch (error) {
         console.error('Error in /signup route:', error.message);
         res.status(400).json({ error: error.message });
@@ -37,7 +38,7 @@ router.post('/login', async (req, res) => {
     try {
         const { email } = req.body;
 
-        const validation = await loginRequest(req);
+        const validation = await loginRequest.validate(req);
         if (validation.hasErrors) {
             return res.status(422).json(validation.errors);
         }
@@ -49,6 +50,7 @@ router.post('/login', async (req, res) => {
 
         const token = createToken(user._id);
         res.status(200).json({ email, token });
+
     } catch (error) {
         console.error('Error in /login route:', error.message);
         res.status(400).json({ error: error.message });

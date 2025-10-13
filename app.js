@@ -26,7 +26,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/api/search', smartSearchRouter);
+app.use('/api', smartSearchRouter);
 app.use('/api/user', userRouter);
 
 //db connection
