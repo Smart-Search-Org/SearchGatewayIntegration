@@ -9,7 +9,8 @@ search_service = new SearchService()
 
 router.post('/smart-search', authApi, async function (req, res, next) {
     try {
-        const index_name = req.body.index_name
+        const user_id = req.user._id;
+        const index_name = req.body.index_name;
         const query = req.body.query;
 
         if (!index_name) {
@@ -22,7 +23,7 @@ router.post('/smart-search', authApi, async function (req, res, next) {
             return res.status(400).json({ error: 'Missing "query" in request body' });
         }
 
-        const llm_result = await llm_service.get_llm_response(query);
+        const llm_result = await llm_service.get_llm_response(query, user_id);
         const search_result = await search_service.get_search_response(index_name, llm_result);
 
         res.json(search_result);

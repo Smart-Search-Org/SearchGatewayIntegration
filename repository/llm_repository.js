@@ -7,7 +7,7 @@ class LlmRepository {
         this.MODEL = "Qwen/Qwen2.5-1.5B-Instruct";
     }
 
-    async get_llm_response(userQuery) {
+    async get_llm_response(userQuery, user_id) {
         const systemPrompt = `
 You are a query transformation engine.
 
@@ -76,7 +76,7 @@ Output:
 
         try {
             const response = await axios.post(
-                `${this.LLM_URL}/v1/chat/completions`,
+                `${this.LLM_URL}/v1/chat/completions?user_id=${user_id}`,
                 requestBody
             );
 
