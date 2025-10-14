@@ -14,6 +14,7 @@ class SearchRepository {
             );
 
             const content = response.data;
+            console.info('Successfully parsed search engine response');
 
             try {
                 return JSON.parse(content);

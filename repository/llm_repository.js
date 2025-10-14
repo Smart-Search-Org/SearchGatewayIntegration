@@ -81,6 +81,7 @@ Output:
             );
 
             const content = response.data?.choices?.[0]?.message?.content || "";
+            console.info('Successfully parsed LLM response');
 
             try {
                 return JSON.parse(content);
@@ -89,7 +90,7 @@ Output:
                 return { raw: content };
             }
         } catch (error) {
-            console.error("LLM request failed:", error.message);
+            console.error("LLM request failed: ", error.message);
             throw error;
         }
     }
