@@ -81,7 +81,7 @@ Output:
             );
 
             const content = response.data?.choices?.[0]?.message?.content || "";
-            console.info('Successfully parsed LLM response');
+            console.info(`Successfully parsed LLM response: ${content}` );
 
             try {
                 return JSON.parse(content);
