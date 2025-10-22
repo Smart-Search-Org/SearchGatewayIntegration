@@ -6,8 +6,9 @@ class SearchService {
         this.search_repository = new SearchRepository()
     }
 
-    async get_search_response(index, llm_response) {
+    async get_search_response(user_id, index, llm_response) {
         const request_object = {
+            "user_id": user_id,
             "index_name": index,
             ...llm_response
         }
