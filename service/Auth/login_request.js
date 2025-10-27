@@ -1,6 +1,6 @@
 const validator = require('validator');
 const bcrypt = require('bcrypt');
-const User = require('../models/user_model');
+const User = require('../../models/user_model');
 
 class LoginRequestValidator {
     static #instance;

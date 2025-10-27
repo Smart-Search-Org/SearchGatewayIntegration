@@ -1,5 +1,5 @@
 const validator = require('validator');
-const User = require('../models/user_model');
+const User = require('../../models/user_model');
 
 class SignupRequestValidator {
     static #instance;

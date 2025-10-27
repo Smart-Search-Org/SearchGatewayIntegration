@@ -9,6 +9,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+var indexRouter = require('./routes/index')
 var smartSearchRouter = require('./routes/smart_search');
 var userRouter = require('./routes/user');
 
@@ -26,6 +27,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/api', indexRouter);
 app.use('/api', smartSearchRouter);
 app.use('/api/user', userRouter);
 
