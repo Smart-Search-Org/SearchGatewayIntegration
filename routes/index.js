@@ -1,5 +1,4 @@
 const express = require('express');
-const { keycloak } = require("../app");
 const IndexService = require("../service/index_service");
 
 

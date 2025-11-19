@@ -1,6 +1,6 @@
 {
     "realm": "smart-search",
-    "auth-server-url": "http://keycloak-service:80",
+    "auth-server-url": "http://localhost:57846",
     "ssl-required": "none",
     "resource": "search-gateway",
     "public-client": true,

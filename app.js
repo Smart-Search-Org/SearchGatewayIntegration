@@ -12,6 +12,15 @@ const cors = require('cors');
 const app = express();
 const memoryStore = new session.MemoryStore();
 
+// ===== Middleware =====
+app.use(logger('dev'));
+app.use(express.json()); // parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // parse URL-encoded bodies
+app.use(cookieParser());
+app.use(cors());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ===== Session & Keycloak =====
 app.use(session({
   secret: "some secret",
   resave: false,
@@ -19,42 +28,35 @@ app.use(session({
   store: memoryStore
 }));
 
-// Initialize Keycloak
 const keycloak = new Keycloak({ store: memoryStore }, "./keycloak-config.json");
 app.use(keycloak.middleware());
 
-// Pass Keycloak instance when mounting routers
+// ===== Routes (pass Keycloak instance) =====
 app.use('/api', require('./routes/index')(keycloak));
 app.use('/api/smart-search', require('./routes/smart_search')(keycloak));
-//app.use('/api/user', require('./routes/user')(keycloak)); // modify if user routes need protection
+// app.use('/api/user', require('./routes/user')(keycloak)); // uncomment if needed
 
-// view engine setup
+// ===== View engine setup =====
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(cors());
-
-// DB connection
+// ===== Database =====
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("db connection established"))
+    .then(() => console.log("DB connection established"))
     .catch(err => console.error(err));
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
+// ===== 404 handler =====
+app.use((req, res, next) => {
   next(createError(404));
 });
 
-// error handler
-app.use(function(err, req, res, next) {
+// ===== Error handler =====
+app.use((err, req, res, next) => {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
   res.status(err.status || 500);
   res.render('error');
 });
 
+// ===== Export both app and keycloak =====
 module.exports = { app, keycloak };
