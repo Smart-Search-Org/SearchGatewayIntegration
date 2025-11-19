@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const User = require('../models/user_model')
 
+
 const authApi = async (req, res, next) => {
 
     const { authorization } = req.headers
@@ -21,5 +22,6 @@ const authApi = async (req, res, next) => {
         res.status(401).json({error: 'Request is not authorized'})
     }
 }
+
 
 module.exports = authApi

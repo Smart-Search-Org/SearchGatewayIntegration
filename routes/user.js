@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user_model');
 const signupRequest = require('../service/Auth/signup_request');
 const loginRequest = require('../service/Auth/login_request');
-const authApi = require('../middlewares/auth_app');
 const router = express.Router();
 
 const createToken = (_id) => {
@@ -57,7 +56,7 @@ router.post('/login', async (req, res) => {
     }
 });
 
-router.get('/me', authApi, async (req, res) => {
+router.get('/me', async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select(['_id', 'email']);
         if (!user) {

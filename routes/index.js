@@ -1,103 +1,70 @@
 const express = require('express');
-const indexService = require('../service/index_service');
-const authApi = require('../middlewares/auth_app');
-const router = express.Router();
+const { keycloak } = require("../app");
+const IndexService = require("../service/index_service");
 
-index_service = new indexService();
 
-router.post('/index', authApi, async function (req, res, next) {
-    try {
-        const user_id = req.user._id;
-        const index_name = req.body.index_name;
+module.exports = (keycloak) => {
+    const router = express.Router();
+    const index_service = new IndexService();
 
-        if (!index_name) {
-            console.error('Error in /index route: missing "index_name" in request body');
-            return res.status(400).json({ error: 'Missing "index_name" in request body' });
+    router.post('/index', keycloak.protect(), async (req, res) => {
+        try {
+            const user_id = req.kauth.grant.access_token.content.sub;
+            const index_name = req.body.index_name;
+            if (!index_name) return res.status(400).json({ error: 'Missing "index_name"' });
+
+            const index_response = await index_service.create_index(user_id, index_name);
+            res.status(200).json({ index_response });
+        } catch (error) {
+            console.error(error);
+            res.status(400).json({ error: error.message });
         }
+    });
 
-        const index_response = await index_service.create_index(user_id, index_name);
+    router.delete('/index', keycloak.protect(), async (req, res) => {
+        try {
+            const user_id = req.kauth.grant.access_token.content.sub;
+            const index_name = req.query.indexName;
+            if (!index_name) return res.status(400).json({ error: 'Missing "index_name"' });
 
-        res.status(200).json({ index_response });
-
-    } catch (error) {
-        console.error('Error in /signup route:', error.message);
-        res.status(400).json({ error: error.message });
-    }
-});
-
-router.delete('/index', authApi, async function (req, res, next) {
-    try {
-        const user_id = req.user._id;
-        const index_name = req.query.indexName;
-
-        if (!index_name) {
-            console.error('Error in /index route: missing "index_name" in request body');
-            return res.status(400).json({ error: 'Missing "index_name" in request body' });
+            const index_response = await index_service.delete_index(user_id, index_name);
+            res.status(204).json({ index_response });
+        } catch (error) {
+            console.error(error);
+            res.status(400).json({ error: error.message });
         }
+    });
 
-        const index_response = await index_service.delete_index(user_id, index_name);
+    router.get('/index-structure', keycloak.protect(), async (req, res) => {
+        try {
+            const user_id = req.kauth.grant.access_token.content.sub;
+            const index_name = req.query.indexName;
+            if (!index_name) return res.status(400).json({ error: 'Missing "index_name"' });
 
-        res.status(204).json({ index_response });
-
-    } catch (error) {
-        console.error('Error in /signup route:', error.message);
-        res.status(400).json({ error: error.message });
-    }
-});
-
-router.get('/index-structure', authApi, async function (req, res, next) {
-    try {
-        const user_id = req.user._id;
-        const index_name = req.query.indexName;
-
-        if (!index_name) {
-            console.error('Error in /index route: missing "index_name" in request body');
-            return res.status(400).json({ error: 'Missing "index_name" in request body' });
+            const index_response = await index_service.get_index_structure(user_id, index_name);
+            res.status(200).json({ index_response });
+        } catch (error) {
+            console.error(error);
+            res.status(400).json({ error: error.message });
         }
+    });
 
-        const index_response = await index_service.get_index_structure(user_id, index_name);
+    router.post('/index/docs', keycloak.protect(), async (req, res) => {
+        try {
+            const user_id = req.kauth.grant.access_token.content.sub;
+            const { driver, dsn, table, index_name } = req.body;
 
-        res.status(200).json({ index_response });
+            if (!driver || !dsn || !table || !index_name) {
+                return res.status(400).json({ error: 'Missing required fields' });
+            }
 
-    } catch (error) {
-        console.error('Error in /signup route:', error.message);
-        res.status(400).json({ error: error.message });
-    }
-});
-
-router.post('/index/docs', authApi, async function (req, res, next) {
-    try {
-        const user_id = req.user._id;
-        const driver = req.body.driver;
-        const dsn = req.body.dsn;
-        const table = req.body.table;
-        const index_name = req.body.index_name;
-
-        if (!driver) {
-            console.error('Error in /index route: missing "driver" in request body');
-            return res.status(400).json({ error: 'Missing "driver" in request body' });
+            const index_response = await index_service.connect_user_database(user_id, driver, dsn, table, index_name);
+            res.status(200).json({ index_response });
+        } catch (error) {
+            console.error(error);
+            res.status(400).json({ error: error.message });
         }
-        if (!dsn) {
-            console.error('Error in /index route: missing "dsn" in request body');
-            return res.status(400).json({ error: 'Missing "dsn" in request body' });
-        }
-        if (!table) {
-            console.error('Error in /index route: missing "table" in request body');
-            return res.status(400).json({ error: 'Missing "table" in request body' });
-        }
-        if (!index_name) {
-            console.error('Error in /index route: missing "index_name" in request body');
-            return res.status(400).json({ error: 'Missing "index_name" in request body' });
-        }
+    });
 
-        const index_response = await index_service.connect_user_database(user_id, driver, dsn, table, index_name);
-
-        res.status(200).json({ index_response });
-
-    } catch (error) {
-        console.error('Error in /signup route:', error.message);
-        res.status(400).json({ error: error.message });
-    }
-});
-
-module.exports = router;
+    return router;
+};
