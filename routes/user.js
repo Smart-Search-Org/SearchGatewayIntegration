@@ -81,6 +81,7 @@ router.post('/keycloak-login', async (req, res) => {
         const params = new URLSearchParams();
         params.append('grant_type', 'password');
         params.append('client_id', "search-gateway");
+        params.append('client_secret', "v0O36ZmVqPBoXYFc16mcMHmDaYDvpFZu");
         params.append('username', username);
         params.append('password', password);
 
