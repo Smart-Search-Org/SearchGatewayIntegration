@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user_model');
 const signupRequest = require('../service/Auth/signup_request');
 const loginRequest = require('../service/Auth/login_request');
+const {post} = require("axios");
 const router = express.Router();
 
 const createToken = (_id) => {
@@ -66,6 +67,34 @@ router.get('/me', async (req, res) => {
     } catch (error) {
         console.error('Error in /me route:', error.message);
         res.status(400).json({ error: error.message });
+    }
+});
+
+router.post('/keycloak-login', async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password)
+        return res.status(400).json({ error: 'Missing username or password' });
+
+    try {
+        // Request token from Keycloak
+        const params = new URLSearchParams();
+        params.append('grant_type', 'password');
+        params.append('client_id', "search-gateway");
+        params.append('username', username);
+        params.append('password', password);
+
+        const tokenResponse = await post(
+            `http://keycloak-service.smart-search.svc.cluster.local:80/realms/smart-search/protocol/openid-connect/token`,
+            params,
+            { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        );
+
+        // Return token to client
+        res.status(200).json(tokenResponse.data);
+    } catch (error) {
+        console.error('Keycloak login error:', error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({ error: 'Login failed' });
     }
 });
 

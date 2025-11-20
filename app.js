@@ -34,7 +34,7 @@ app.use(keycloak.middleware());
 // ===== Routes (pass Keycloak instance) =====
 app.use('/api', require('./routes/index')(keycloak));
 app.use('/api/smart-search', require('./routes/smart_search')(keycloak));
-// app.use('/api/user', require('./routes/user')(keycloak)); // uncomment if needed
+app.use('/api/user', require('./routes/user'));
 
 // ===== View engine setup =====
 app.set('views', path.join(__dirname, 'views'));
