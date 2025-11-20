@@ -3,25 +3,41 @@ const User = require('../models/user_model')
 
 
 const authApi = async (req, res, next) => {
-
-    const { authorization } = req.headers
+    const { authorization } = req.headers;
+    console.log('[authApi] Incoming request headers:', req.headers);
 
     if (!authorization) {
-        return res.status(401).json({error: 'Authorization token required'})
+        console.error('[authApi] No Authorization header found');
+        return res.status(401).json({ error: 'Authorization token required' });
     }
 
-    const token = authorization.split(' ')[1]
+    const tokenParts = authorization.split(' ');
+    if (tokenParts.length !== 2 || tokenParts[0] !== 'Bearer') {
+        console.error('[authApi] Malformed Authorization header:', authorization);
+        return res.status(401).json({ error: 'Malformed authorization header' });
+    }
+
+    const token = tokenParts[1];
+    console.log('[authApi] Token extracted:', token);
 
     try {
-        const { _id } = jwt.verify(token, process.env.SECRET)
-        req.user = await User.findOne({ _id }).select('_id')
-        next()
+        const decoded = jwt.verify(token, process.env.SECRET);
+        console.log('[authApi] Token decoded successfully:', decoded);
+
+        req.user = await User.findOne({ _id: decoded._id }).select('_id');
+        if (!req.user) {
+            console.error('[authApi] User not found for _id:', decoded._id);
+            return res.status(401).json({ error: 'User not found' });
+        }
+
+        console.log('[authApi] User attached to request:', req.user);
+        next();
 
     } catch (error) {
-
-        res.status(401).json({error: 'Request is not authorized'})
+        console.error('[authApi] Token verification failed:', error.message);
+        res.status(401).json({ error: 'Request is not authorized', details: error.message });
     }
-}
+};
 
 
 module.exports = authApi
