@@ -9,6 +9,8 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
 
+process.env.DEBUG = "keycloak-connect:*";
+
 const app = express();
 const memoryStore = new session.MemoryStore();
 

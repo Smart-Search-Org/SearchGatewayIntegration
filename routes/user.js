@@ -86,7 +86,7 @@ router.post('/keycloak-login', async (req, res) => {
         params.append('password', password);
 
         const tokenResponse = await post(
-            `http://keycloak-service.smart-search.svc.cluster.local:80/realms/smart-search/protocol/openid-connect/token`,
+            `http://keycloak-service.smart-search.svc.cluster.local:8080/realms/smart-search/protocol/openid-connect/token`,
             params,
             { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
         );
