@@ -3,7 +3,7 @@
     "auth-server-url": "http://keycloak-service.smart-search.svc.cluster.local:80",
     "ssl-required": "none",
     "resource": "search-gateway",
-    "public-client": true,
+    "public-client": false,
     "bearer-only": true,
     "confidential-port": 0
 }
