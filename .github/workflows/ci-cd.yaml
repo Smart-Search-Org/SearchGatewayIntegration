@@ -30,7 +30,43 @@ jobs:
           push: true
           tags: dansil2301/search_gateway:latest
 
-#      - name: Run tests
-#        run: |
-#          docker run --rm dansil2301/flask-app:latest pytest
+      - name: Clone infra repo
+        uses: actions/checkout@v3
+        with:
+          repository: https://github.com/Smart-Search-Org/SearchInfrastructure
+          token: ${{ secrets.TOKEN_GITHUB }}
+          path: infra-repo
+
+      - name: Update version annotation in Deployment
+        run: |
+          python3 <<'EOF'
+          import yaml
+          import os
+
+          DEPLOYMENT_FILE = "infra-repo/search_gateway/deployment.yaml"
+
+          with open(DEPLOYMENT_FILE) as f:
+              deployment = yaml.safe_load(f)
+
+          # Get current version or default to 0
+          annotations = deployment.setdefault("spec", {}).setdefault("template", {}).setdefault("metadata", {}).setdefault("annotations", {})
+          current_version = annotations.get("version", "0")
+          # Increment version
+          new_version = str(int(current_version) + 1)
+          annotations["version"] = new_version
+
+          with open(DEPLOYMENT_FILE, "w") as f:
+              yaml.dump(deployment, f, sort_keys=False)
+
+          print(f"Updated version to {new_version}")
+          EOF
+
+      - name: Commit and push changes to infra repo
+        run: |
+          cd infra-repo
+          git config user.name "CI Bot"
+          git config user.email "ci-bot@example.com"
+          git add search_gateway/deployment.yaml
+          git commit -m "CI: bump search-gateway version"
+          git push origin main
 
