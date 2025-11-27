@@ -43,7 +43,7 @@ jobs:
           import yaml
           import os
 
-          DEPLOYMENT_FILE = "infra-repo/search_gateway/deployment.yaml"
+          DEPLOYMENT_FILE = "infra-repo/search_gateway/search_gateway_deployment.yaml"
 
           with open(DEPLOYMENT_FILE) as f:
               deployment = yaml.safe_load(f)
