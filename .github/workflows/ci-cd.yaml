@@ -33,7 +33,7 @@ jobs:
       - name: Clone infra repo
         uses: actions/checkout@v3
         with:
-          repository: https://github.com/Smart-Search-Org/SearchInfrastructure
+          repository: Smart-Search-Org/SearchInfrastructure
           token: ${{ secrets.TOKEN_GITHUB }}
           path: infra-repo
 
