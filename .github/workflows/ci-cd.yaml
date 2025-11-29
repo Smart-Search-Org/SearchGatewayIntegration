@@ -2,18 +2,48 @@ name: SearchEngine Pipeline
 
 on:
   push:
-    branches: [ "main" ]   # Run pipeline on pushes to main branch
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-  build-test-deploy:
+  build-deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # ---------------------------
+      # CHECKOUT SOURCE CODE
+      # ---------------------------
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # ---------------------------
+      # SONARCLOUD ANALYSIS
+      # ---------------------------
+      - name: Set up JDK for SonarCloud
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Run SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          projectBaseDir: .
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---------------------------
+      # DOCKER BUILD / PUSH
+      # ---------------------------
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -30,6 +60,9 @@ jobs:
           push: true
           tags: dansil2301/search_gateway:latest
 
+      # ---------------------------
+      # INFRA REPO UPDATE
+      # ---------------------------
       - name: Clone infra repo
         uses: actions/checkout@v3
         with:
@@ -41,17 +74,14 @@ jobs:
         run: |
           python3 <<'EOF'
           import yaml
-          import os
 
           DEPLOYMENT_FILE = "infra-repo/search_gateway/search_gateway_deployment.yaml"
 
           with open(DEPLOYMENT_FILE) as f:
               deployment = yaml.safe_load(f)
 
-          # Get current version or default to 0
           annotations = deployment.setdefault("spec", {}).setdefault("template", {}).setdefault("metadata", {}).setdefault("annotations", {})
           current_version = annotations.get("version", "0")
-          # Increment version
           new_version = str(int(current_version) + 1)
           annotations["version"] = new_version
 
@@ -69,4 +99,3 @@ jobs:
           git add search_gateway/search_gateway_deployment.yaml
           git commit -m "CI: bump search-gateway version"
           git push origin main
-
