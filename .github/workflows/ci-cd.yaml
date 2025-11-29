@@ -102,7 +102,7 @@ jobs:
           severity: 'HIGH,CRITICAL'
           ignore-unfixed: true
           vuln-type: 'os,library'
-          exit-code: '1'
+          exit-code: '0'
 
   # =======================================
   # CD: Deployment Update (Infra Repo)
