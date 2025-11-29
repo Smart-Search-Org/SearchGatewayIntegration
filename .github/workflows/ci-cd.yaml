@@ -6,9 +6,14 @@ on:
   pull_request:
     branches: ["main"]
 
+env:
+  REGISTRY: docker.io/${{ vars.DOCKER_USERNAME }}
+  IMAGE_NAME: search_gateway
+  IMAGE_TAG: latest
+
 jobs:
   # =======================================
-  # 🚀 CI: SonarCloud + Docker Build & Push
+  # CI: SonarCloud + Docker Build & Push
   # =======================================
   ci:
     runs-on: ubuntu-latest
@@ -56,20 +61,56 @@ jobs:
           username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+      - name: Build Docker image
+        run: |
+          docker build -t $REGISTRY/$IMAGE_NAME:$IMAGE_TAG .
+
+      - name: Save Docker image as artifact
+        run: docker save -o image.tar $REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
         with:
-          context: .
-          push: true
-          tags: dansil2301/search_gateway:latest
+          name: docker-image
+          path: image.tar
+
+      - name: Push Docker image
+        run: docker push $REGISTRY/$IMAGE_NAME:$IMAGE_TAG
 
   # =======================================
-  # 🚀 CD: Deployment File Update (Infra Repo)
+  # SECURITY: Trivy Vulnerability Scan
+  # =======================================
+  scan-image:
+    runs-on: ubuntu-latest
+    needs: ci
+
+    steps:
+      - name: Download built image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: .
+
+      - name: Load Docker image
+        run: docker load -i image.tar
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          exit-code: '1'
+
+  # =======================================
+  # CD: Deployment Update (Infra Repo)
   # =======================================
   cd:
-    needs: ci               # ← Only run if CI passes
+    needs: scan-image
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'    # ← Only run on main branch pushes
+    if: github.ref == 'refs/heads/main'
 
     steps:
 
@@ -103,7 +144,6 @@ jobs:
                         .setdefault("annotations", {})
           )
 
-          # Increment version
           current_version = annotations.get("version", "0")
           new_version = str(int(current_version) + 1)
           annotations["version"] = new_version
