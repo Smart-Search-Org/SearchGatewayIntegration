@@ -7,7 +7,10 @@ on:
     branches: ["main"]
 
 jobs:
-  build-deploy:
+  # =======================================
+  # 🚀 CI: SonarCloud + Docker Build & Push
+  # =======================================
+  ci:
     runs-on: ubuntu-latest
 
     steps:
@@ -60,8 +63,18 @@ jobs:
           push: true
           tags: dansil2301/search_gateway:latest
 
+  # =======================================
+  # 🚀 CD: Deployment File Update (Infra Repo)
+  # =======================================
+  cd:
+    needs: ci               # ← Only run if CI passes
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'    # ← Only run on main branch pushes
+
+    steps:
+
       # ---------------------------
-      # INFRA REPO UPDATE
+      # CHECKOUT INFRA REPO
       # ---------------------------
       - name: Clone infra repo
         uses: actions/checkout@v3
@@ -70,6 +83,9 @@ jobs:
           token: ${{ secrets.TOKEN_GITHUB }}
           path: infra-repo
 
+      # ---------------------------
+      # UPDATE VERSION
+      # ---------------------------
       - name: Update version annotation in Deployment
         run: |
           python3 <<'EOF'
@@ -80,7 +96,14 @@ jobs:
           with open(DEPLOYMENT_FILE) as f:
               deployment = yaml.safe_load(f)
 
-          annotations = deployment.setdefault("spec", {}).setdefault("template", {}).setdefault("metadata", {}).setdefault("annotations", {})
+          annotations = (
+              deployment.setdefault("spec", {})
+                        .setdefault("template", {})
+                        .setdefault("metadata", {})
+                        .setdefault("annotations", {})
+          )
+
+          # Increment version
           current_version = annotations.get("version", "0")
           new_version = str(int(current_version) + 1)
           annotations["version"] = new_version
@@ -91,11 +114,14 @@ jobs:
           print(f"Updated version to {new_version}")
           EOF
 
+      # ---------------------------
+      # COMMIT + PUSH
+      # ---------------------------
       - name: Commit and push changes to infra repo
         run: |
           cd infra-repo
           git config user.name "CI Bot"
           git config user.email "ci-bot@example.com"
           git add search_gateway/search_gateway_deployment.yaml
-          git commit -m "CI: bump search-gateway version"
+          git commit -m "CI/CD: bump search-gateway version"
           git push origin main
