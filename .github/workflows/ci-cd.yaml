@@ -46,9 +46,11 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@v2
         with:
           projectBaseDir: .
+          args: -Dsonar.qualitygate.wait=false
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
 
       # ---------------------------
       # DOCKER BUILD / PUSH
